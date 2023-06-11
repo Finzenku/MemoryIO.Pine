@@ -10,7 +10,7 @@
         private const int SixteenBitSize = 2;
         private const int EightBitSize = 1;
 
-        public static byte[] BuildMessage(RequestMessage request)
+        public static byte[] BuildRequest(RequestMessage request)
         {
             // [RequestSize (4 bytes)] [OpCode (1 byte)] [Argument (variable length)] 
             int requestSize = RequestSizeSize + OpCodeSize + request.Argument.Length;
