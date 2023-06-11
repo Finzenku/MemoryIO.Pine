@@ -55,7 +55,7 @@
         public static byte[] BuildWriteMsg(int address, long data) => BuildWriteMsg(OpCode.MsgWrite64, address, BitConverter.GetBytes(data));
         public static byte[] BuildWriteMsg(int address, ulong data) => BuildWriteMsg(OpCode.MsgWrite64, address, BitConverter.GetBytes(data));
 
-        public static byte[] BuildBatchReadMsg(int address, int readLengthInBytes)
+        public static byte[] BuildReadMsg(int address, int readLengthInBytes)
         {
             switch (readLengthInBytes)
             {
@@ -86,7 +86,7 @@
 
             while (dataLength > 0)
             {
-                // See comment in BuildBatchWriteMsg for the if-else chain that this branchless statement represents
+                // See comment in BuildWriteMsg for the if-else chain that this branchless statement represents
                 // Assumptions are that OpCode enum has MsgRead8, MsgRead16, MsgRead32, MsgRead64 in acending order (0, 1, 2, 3)
                 int opCodeValue = dataLength - SixtyFourBitSize >> 31 & 1;
                 opCodeValue |= dataLength - ThirtyTwoBitSize >> 31 & 2;
@@ -105,7 +105,7 @@
             return buffer;
         }
 
-        public static byte[] BuildBatchWriteMsg(int address, byte[] dataToWrite)
+        public static byte[] BuildWriteMsg(int address, byte[] dataToWrite)
         {
             int dataLength = dataToWrite.Length;
             switch (dataLength)
