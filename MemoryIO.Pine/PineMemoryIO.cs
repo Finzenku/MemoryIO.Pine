@@ -36,6 +36,8 @@ namespace MemoryIO.Pine
 
         }
 
+        #region Methods
+
         #region MemoryIO
 
         #region Read
@@ -244,6 +246,49 @@ namespace MemoryIO.Pine
             await WriteDataAsync(address, buffer);
         }
         #endregion
+
+        #endregion
+
+        #endregion
+
+        #region PINE
+
+        private AnswerMessage GetAnswer(RequestMessage request) => tcpQueuer.SendRequestAsync(RequestBuilder.BuildRequest(request)).GetAwaiter().GetResult();
+        private async Task<AnswerMessage> GetAnswerAsync(RequestMessage request) => await tcpQueuer.SendRequestAsync(RequestBuilder.BuildRequest(request));
+
+        // Get an AnswerMessage that returns nothing, return true if ResultCode.OK
+        private bool GetNoArgAnswer(RequestMessage request)
+        {
+            AnswerMessage answer = GetAnswer(request);
+            if (answer.ResultCode != ResultCode.OK)
+                return false;
+            return true;
+        }
+
+        // Get an AnswerMessage that returns a char[] and convert it to a UTF8 string if ResultCode.OK
+        private string GetUTF8Answer(RequestMessage request)
+        {
+            AnswerMessage answer = GetAnswer(request);
+            if (answer.ResultCode != ResultCode.OK)
+                return string.Empty;
+            // Argument: [int size (4 bytes)] [char[] string]
+            return Encoding.UTF8.GetString(answer.Argument.AsSpan().Slice(3));
+        }
+
+        public string GetVersion() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgVersion });
+        public bool SaveState(byte saveSlot) => GetNoArgAnswer(new RequestMessage() { OpCode = OpCode.MsgSaveState, Argument = new byte[] { saveSlot } });
+        public bool LoadState(byte saveSlot) => GetNoArgAnswer(new RequestMessage() { OpCode = OpCode.MsgLoadState, Argument = new byte[] { saveSlot } });
+        public string GetGameTitle() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgTitle });
+        public string GetGameID() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgTitle });
+        public string GetGameUUID() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgUUID });
+        public string GetGameVersion() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgGameVersion });
+        public EmulatorStatus GetStatus()
+        {
+            AnswerMessage answer = GetAnswer(new RequestMessage() { OpCode = OpCode.MsgStatus });
+            if (answer.ResultCode != ResultCode.OK)
+                return EmulatorStatus.Unknown;
+            return (EmulatorStatus)BitConverter.ToInt32(answer.Argument);
+        }
 
         #endregion
 
