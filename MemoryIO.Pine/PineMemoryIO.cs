@@ -41,10 +41,12 @@ namespace MemoryIO.Pine
         #region Read
 
         #region ReadData
+        // Currently PINE only works with 32bit memory addresses, which is fine for most (all?) emulators
+        //   so we'll just ensure that any IntPtrs we get are truncated to an Int32 before sending them to the RequestBuilder
         public byte[] ReadData(IntPtr address, int dataLength) => ReadData((int)address, dataLength);
-        public byte[] ReadData(int address, int dataLength) => tcpQueuer.SendRequestAsync(RequestBuilder.BuildBatchReadMsg(address, dataLength)).GetAwaiter().GetResult().Argument;
+        public byte[] ReadData(int address, int dataLength) => tcpQueuer.SendRequestAsync(RequestBuilder.BuildReadMsg(address, dataLength)).GetAwaiter().GetResult().Argument;
         public async Task<byte[]> ReadDataAsync(IntPtr address, int dataLength) => await ReadDataAsync((int)address, dataLength);
-        public async Task<byte[]> ReadDataAsync(int address, int dataLength) => (await tcpQueuer.SendRequestAsync(RequestBuilder.BuildBatchReadMsg(address, dataLength))).Argument;
+        public async Task<byte[]> ReadDataAsync(int address, int dataLength) => (await tcpQueuer.SendRequestAsync(RequestBuilder.BuildReadMsg(address, dataLength))).Argument;
         #endregion
 
         #region Read<T>
@@ -146,9 +148,9 @@ namespace MemoryIO.Pine
         #region WriteData
         // tcpQueuer.SendRequestAsync returns an AnswerMessage if in the future we want to add error handling
         public void WriteData(IntPtr address, byte[] data) => WriteData((int)address, data);
-        public void WriteData(int address, byte[] data) => tcpQueuer.SendRequestAsync(RequestBuilder.BuildBatchWriteMsg(address, data)).GetAwaiter().GetResult();
+        public void WriteData(int address, byte[] data) => tcpQueuer.SendRequestAsync(RequestBuilder.BuildWriteMsg(address, data)).GetAwaiter().GetResult();
         public async Task WriteDataAsync(IntPtr address, byte[] data) => await WriteDataAsync((int)address, data);
-        public async Task WriteDataAsync(int address, byte[] data) => await tcpQueuer.SendRequestAsync(RequestBuilder.BuildBatchWriteMsg(address, data));
+        public async Task WriteDataAsync(int address, byte[] data) => await tcpQueuer.SendRequestAsync(RequestBuilder.BuildWriteMsg(address, data));
         #endregion
 
         #region Write<T>
