@@ -264,6 +264,13 @@ namespace MemoryIO.Pine
                 return false;
             return true;
         }
+        private async Task<bool> GetNoArgAnswerAsync(RequestMessage request)
+        {
+            AnswerMessage answer = await GetAnswerAsync(request);
+            if (answer.ResultCode != ResultCode.OK)
+                return false;
+            return true;
+        }
 
         // Get an AnswerMessage that returns a char[] and convert it to a UTF8 string if ResultCode.OK
         private string GetUTF8Answer(RequestMessage request)
@@ -274,17 +281,39 @@ namespace MemoryIO.Pine
             // Argument: [int size (4 bytes)] [char[] string]
             return Encoding.UTF8.GetString(answer.Argument.AsSpan().Slice(3));
         }
+        private async Task<string> GetUTF8AnswerAsync(RequestMessage request)
+        {
+            AnswerMessage answer = await GetAnswerAsync(request);
+            if (answer.ResultCode != ResultCode.OK)
+                return string.Empty;
+            // Argument: [int size (4 bytes)] [char[] string]
+            return Encoding.UTF8.GetString(answer.Argument.AsSpan().Slice(3));
+        }
 
         public string GetVersion() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgVersion });
+        public async Task<string> GetVersionAsync() => await GetUTF8AnswerAsync(new RequestMessage() { OpCode = OpCode.MsgVersion });
         public bool SaveState(byte saveSlot) => GetNoArgAnswer(new RequestMessage() { OpCode = OpCode.MsgSaveState, Argument = new byte[] { saveSlot } });
+        public async Task<bool> SaveStateAsync(byte saveSlot) => await GetNoArgAnswerAsync(new RequestMessage() { OpCode = OpCode.MsgSaveState, Argument = new byte[] { saveSlot } });
         public bool LoadState(byte saveSlot) => GetNoArgAnswer(new RequestMessage() { OpCode = OpCode.MsgLoadState, Argument = new byte[] { saveSlot } });
+        public async Task<bool> LoadStateAsync(byte saveSlot) => await GetNoArgAnswerAsync(new RequestMessage() { OpCode = OpCode.MsgLoadState, Argument = new byte[] { saveSlot } });
         public string GetGameTitle() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgTitle });
+        public async Task<string> GetGameTitleAsync() => await GetUTF8AnswerAsync(new RequestMessage() { OpCode = OpCode.MsgTitle });
         public string GetGameID() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgTitle });
+        public async Task<string> GetGameIDAsync() => await GetUTF8AnswerAsync(new RequestMessage() { OpCode = OpCode.MsgTitle });
         public string GetGameUUID() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgUUID });
+        public async Task<string> GetGameUUIDAsync() => await GetUTF8AnswerAsync(new RequestMessage() { OpCode = OpCode.MsgUUID });
         public string GetGameVersion() => GetUTF8Answer(new RequestMessage() { OpCode = OpCode.MsgGameVersion });
+        public async Task<string> GetGameVersionAsync() => await GetUTF8AnswerAsync(new RequestMessage() { OpCode = OpCode.MsgGameVersion });
         public EmulatorStatus GetStatus()
         {
             AnswerMessage answer = GetAnswer(new RequestMessage() { OpCode = OpCode.MsgStatus });
+            if (answer.ResultCode != ResultCode.OK)
+                return EmulatorStatus.Unknown;
+            return (EmulatorStatus)BitConverter.ToInt32(answer.Argument);
+        }
+        public async Task<EmulatorStatus> GetStatusAsync()
+        {
+            AnswerMessage answer = await GetAnswerAsync(new RequestMessage() { OpCode = OpCode.MsgStatus });
             if (answer.ResultCode != ResultCode.OK)
                 return EmulatorStatus.Unknown;
             return (EmulatorStatus)BitConverter.ToInt32(answer.Argument);
